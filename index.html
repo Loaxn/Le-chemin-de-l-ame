@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Voyage de l'Âme</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;600&family=Raleway:wght@200;300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sand1:#C47B2A; --sand2:#A8601A; --sand3:#7A400A;
+  --sky1:#1C2030;  --sky2:#3A3020;  --sky3:#6B4A1A;
+  --cream:#F5EDD5; --gold:#D4A843;  --gold2:#B88A2A;
+  --c1:#D4A843;    --c1r:212,168,67;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#1A1408;font-family:'Raleway',sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+
+/* ── Vignette ── */
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 90% 70% at 50% 45%,transparent 25%,rgba(15,10,5,.35) 65%,rgba(10,7,3,.82) 100%)}
+
+/* ── Corner ornaments (inspired by image) ── */
+.corner{position:fixed;z-index:4;pointer-events:none;opacity:.55}
+.corner svg{display:block}
+#c-tl{top:16px;left:16px}
+#c-br{bottom:16px;right:16px}
+
+/* ── Sound toggle ── */
+#sound-btn{
+  position:fixed;top:18px;right:22px;z-index:20;
+  background:transparent;border:none;cursor:pointer;
+  color:rgba(212,168,67,.5);font-size:.58rem;letter-spacing:.2em;
+  font-family:'Raleway',sans-serif;font-weight:200;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;transition:color .3s;
+}
+#sound-btn:hover{color:rgba(212,168,67,.85)}
+#sound-icon{font-size:.9rem}
+
+/* ── Progress dots ── */
+#dots{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  display:flex;gap:9px;z-index:20;opacity:0;transition:opacity .6s ease}
+.dot{width:4px;height:4px;border-radius:50%;background:rgba(var(--c1r),.2);transition:all .4s}
+.dot.active{background:rgba(var(--c1r),.85);transform:scale(1.4)}
+
+/* ── Scenes ── */
+.scene{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:2rem;
+  opacity:0;pointer-events:none;transition:opacity 1s ease}
+.scene.active{opacity:1;pointer-events:all}
+
+/* ── Type ── */
+.eyebrow{font-weight:200;font-size:clamp(.5rem,1vw,.6rem);letter-spacing:.38em;
+  text-transform:uppercase;color:rgba(var(--c1r),.55);margin-bottom:1.4rem}
+.serif{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  color:var(--cream);line-height:1.8}
+.cinzel{font-family:'Cinzel',serif;font-weight:400;color:var(--cream);letter-spacing:.08em}
+.big{font-size:clamp(1.4rem,3.8vw,2.3rem);margin-bottom:.7rem}
+.med{font-size:clamp(1rem,2.2vw,1.35rem)}
+.dim{color:rgba(245,237,213,.38);font-size:clamp(.5rem,.9vw,.58rem);
+  letter-spacing:.2em;text-transform:uppercase;margin-top:.5rem}
+.gold{color:var(--gold)}
+hr.orn{border:none;height:.5px;
+  background:linear-gradient(to right,transparent,rgba(var(--c1r),.4),transparent);
+  width:min(240px,36vw);margin:1.6rem 0}
+
+/* ── Diamond button (like image) ── */
+.btn{
+  font-family:'Cinzel',serif;font-weight:400;
+  font-size:clamp(.55rem,1.1vw,.65rem);letter-spacing:.28em;
+  color:var(--cream);background:rgba(212,168,67,.12);
+  border:.5px solid rgba(212,168,67,.4);
+  padding:11px 40px;cursor:pointer;position:relative;
+  clip-path:polygon(12px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,12px 100%,0% 50%);
+  transition:background .35s,letter-spacing .35s;
+  animation:breathe 3.5s ease-in-out infinite
+}
+.btn:hover{background:rgba(212,168,67,.22);letter-spacing:.36em;animation:none}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(var(--c1r),0)}
+  50%{box-shadow:0 0 20px 0 rgba(var(--c1r),.1)}}
+
+/* ── Word reveal ── */
+.word{display:inline-block;opacity:0;transform:translateY(7px);
+  transition:opacity .5s ease,transform .5s ease;white-space:pre}
+.word.vis{opacity:1;transform:translateY(0)}
+
+/* ── Scene 0 ── */
+#s0{text-align:center;gap:0}
+#s0-title{font-family:'Cinzel',serif;font-weight:600;
+  font-size:clamp(3rem,10vw,7rem);letter-spacing:.15em;
+  color:var(--cream);text-shadow:0 0 60px rgba(212,168,67,.25);
+  margin-bottom:.3rem;opacity:0;transform:scale(.96) translateY(8px);
+  transition:opacity 1.2s ease,transform 1.2s ease}
+#s0-title.vis{opacity:1;transform:scale(1) translateY(0)}
+#s0-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  font-size:clamp(.7rem,1.6vw,.95rem);letter-spacing:.22em;
+  color:rgba(212,168,67,.6);margin-bottom:.3rem;
+  opacity:0;transition:opacity 1s ease .3s}
+#s0-sub.vis{opacity:1}
+
+/* ── Scene 1 — Arches ── */
+#s1{text-align:center}
+.arches{display:flex;align-items:flex-end;justify-content:center;gap:clamp(1rem,3.5vw,2.8rem)}
+.arch{display:flex;flex-direction:column;align-items:center;cursor:pointer;
+  opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.arch.vis{opacity:1;transform:translateY(0)}
+.arch:nth-child(1){transition-delay:.1s}.arch:nth-child(2){transition-delay:.25s}.arch:nth-child(3){transition-delay:.4s}
+.arch-gate{width:clamp(68px,12vw,105px);transition:transform .4s cubic-bezier(.34,1.5,.64,1),filter .4s}
+.arch:nth-child(2) .arch-gate{width:clamp(82px,15vw,125px)}
+.arch:hover .arch-gate{transform:translateY(-6px) scale(1.05)}
+.arch-gate path.bd{fill:none;stroke-width:1;animation:gp 3.2s ease-in-out infinite}
+.arch-gate path.fl{stroke:none;opacity:.07;transition:opacity .35s}
+.arch:hover .arch-gate path.fl{opacity:.16}
+@keyframes gp{0%,100%{opacity:.5}50%{opacity:.9}}
+.arch:nth-child(1) .arch-gate path.bd{stroke:#8B6FD4;animation-delay:0s}
+.arch:nth-child(2) .arch-gate path.bd{stroke:#5A7FA8;animation-delay:1.1s}
+.arch:nth-child(3) .arch-gate path.bd{stroke:#D4A843;animation-delay:2.2s}
+.arch:nth-child(1) .arch-gate path.fl{fill:#8B6FD4}
+.arch:nth-child(2) .arch-gate path.fl{fill:#5A7FA8}
+.arch:nth-child(3) .arch-gate path.fl{fill:#D4A843}
+.arch-lbl{margin-top:1rem;display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.arch-ic{font-size:clamp(1rem,2.5vw,1.3rem);filter:drop-shadow(0 0 5px currentColor);transition:transform .3s}
+.arch:hover .arch-ic{transform:scale(1.2)}
+.arch-nm{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  font-size:clamp(.85rem,1.8vw,1.05rem);letter-spacing:.1em}
+.arch:nth-child(1) .arch-nm{color:#C4AEF0}
+.arch:nth-child(2) .arch-nm{color:#A8C4E0}
+.arch:nth-child(3) .arch-nm{color:#E8C97A}
+
+/* ── Scene 2 — choices per branch ── */
+#s2{text-align:center}
+.s2-card{max-width:min(520px,88vw);margin:1.4rem 0;position:relative;
+  border:.5px solid rgba(var(--c1r),.15);padding:clamp(1.4rem,3.5vw,2.4rem);background:rgba(15,10,5,.45)}
+.s2-card::before{content:'';position:absolute;top:0;left:12%;right:12%;height:.5px;
+  background:linear-gradient(to right,transparent,var(--c1),transparent)}
+.choices{display:flex;flex-direction:column;gap:.9rem;margin-top:1.6rem;align-items:center}
+.cbtn{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  font-size:clamp(.9rem,2vw,1.1rem);letter-spacing:.05em;
+  color:rgba(245,237,213,.75);background:rgba(var(--c1r),.04);
+  border:.5px solid rgba(var(--c1r),.18);
+  padding:10px clamp(18px,3vw,28px);cursor:pointer;width:100%;max-width:360px;
+  transition:all .3s ease;position:relative;overflow:hidden
+}
+.cbtn:hover{background:rgba(var(--c1r),.1);color:var(--cream);border-color:rgba(var(--c1r),.45)}
+.cbtn .cbtn-sub{display:block;font-family:'Raleway',sans-serif;font-style:normal;
+  font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(var(--c1r),.45);margin-top:3px}
+
+/* ══════════════════════════════════════════════
+   VISUAL FX LAYERS
+══════════════════════════════════════════════ */
+#lucioles{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
+#lucioles.show{opacity:1}
+#rays{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.8s ease}
+#rays.show{opacity:1}
+
+/* rêve — float + violet glow */
+body.fx-reve #s2-card-inner{animation:float-card 4s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(139,111,212,.25))}
+@keyframes float-card{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+body.fx-reve .serif{text-shadow:0 0 25px rgba(139,111,212,.3)}
+
+/* peur — glitch + shake */
+body.fx-peur #s2{animation:scene-shake 5s infinite}
+@keyframes scene-shake{0%,88%,100%{transform:translate(0,0)}89%{transform:translate(-3px,1px)}90%{transform:translate(3px,-2px)}91%{transform:translate(-1px,2px)}92%{transform:translate(2px,-1px)}}
+body.fx-peur #s2-card-inner{animation:glitch-card 3.5s infinite}
+@keyframes glitch-card{0%,92%,100%{transform:translate(0) skewX(0)}93%{transform:translate(-4px,1px) skewX(-2deg);filter:hue-rotate(80deg) brightness(1.15)}94%{transform:translate(3px,-1px) skewX(1.5deg)}95%{transform:translate(-2px,2px);filter:hue-rotate(-50deg)}96%{transform:translate(0) skewX(0)}}
+body.fx-peur .serif{text-shadow:2px 0 rgba(255,0,80,.5),-2px 0 rgba(0,200,255,.4);animation:flicker-txt 4s infinite}
+@keyframes flicker-txt{0%,84%,100%{opacity:1}85%{opacity:.6}86%{opacity:1}89%{opacity:.45}90%{opacity:1}}
+
+/* sens — golden glow + breathe */
+body.fx-sens #s2-card-inner{animation:sens-glow 3.5s ease-in-out infinite}
+@keyframes sens-glow{0%,100%{filter:drop-shadow(0 0 10px rgba(212,168,67,.12))}50%{filter:drop-shadow(0 0 30px rgba(212,168,67,.38))}}
+body.fx-sens .serif{animation:gold-txt 3.5s ease-in-out infinite}
+@keyframes gold-txt{0%,100%{text-shadow:0 0 6px rgba(212,168,67,.15)}50%{text-shadow:0 0 24px rgba(212,168,67,.55)}}
+
+/* ── Scene 3 — Finale ── */
+#s3{text-align:center}
+.hex-wrap{width:clamp(90px,16vw,130px);height:clamp(90px,16vw,130px);
+  margin:0 auto 1.8rem;position:relative}
+.hex-wrap svg{width:100%;height:100%;animation:hspin 25s linear infinite}
+@keyframes hspin{to{transform:rotate(360deg)}}
+.hex-glow{position:absolute;inset:18%;border-radius:50%;
+  animation:hpulse 3.5s ease-in-out infinite}
+@keyframes hpulse{0%,100%{opacity:.4;transform:scale(.88)}50%{opacity:1;transform:scale(1.08)}}
+.final-wrap{max-width:min(500px,85vw);margin:0 auto}
+#final-arch{display:inline-block;font-weight:300;font-size:.58rem;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--c1);
+  border:.5px solid rgba(var(--c1r),.3);padding:5px 18px;margin-bottom:1.6rem;opacity:.8}
+.restart{font-family:'Raleway',sans-serif;font-weight:200;font-size:.55rem;
+  letter-spacing:.22em;text-transform:uppercase;color:rgba(245,237,213,.28);
+  background:transparent;border:none;cursor:pointer;margin-top:1rem;
+  display:block;margin-left:auto;margin-right:auto;transition:color .3s}
+.restart:hover{color:rgba(245,237,213,.65)}
+
+/* ── Popup ── */
+#pop{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:rgba(10,7,3,.78);backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:opacity .4s ease}
+#pop.show{opacity:1;pointer-events:all}
+#pop-box{width:min(460px,88vw);background:rgba(18,13,7,.96);
+  border:.5px solid rgba(var(--c1r),.12);
+  padding:clamp(1.8rem,4.5vw,2.8rem) clamp(1.4rem,4vw,2.6rem);text-align:center;
+  transform:scale(.93) translateY(12px);transition:transform .45s cubic-bezier(.34,1.4,.64,1);
+  position:relative}
+#pop.show #pop-box{transform:scale(1) translateY(0)}
+#pop-box::before{content:'';position:absolute;top:0;left:14%;right:14%;height:.5px;
+  background:var(--pop-c,rgba(212,168,67,.5))}
+#pop-ic{font-size:2rem;display:block;margin-bottom:.9rem;animation:flic 3s ease-in-out infinite}
+@keyframes flic{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#pop-title{font-family:'Cinzel',serif;font-weight:400;font-size:clamp(1rem,2.2vw,1.25rem);
+  color:var(--pop-c,var(--gold));margin-bottom:.8rem;letter-spacing:.04em}
+#pop-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;
+  font-size:clamp(.95rem,2vw,1.15rem);color:rgba(245,237,213,.82);line-height:1.85;margin-bottom:1.6rem}
+#pop-close{font-family:'Cinzel',serif;font-weight:400;font-size:.6rem;letter-spacing:.26em;
+  color:var(--pop-c,var(--gold));background:transparent;
+  border:.5px solid var(--pop-c,rgba(212,168,67,.3));
+  padding:9px 30px;cursor:pointer;transition:background .3s,letter-spacing .3s;
+  clip-path:polygon(8px 0%,calc(100% - 8px) 0%,100% 50%,calc(100% - 8px) 100%,8px 100%,0% 50%)}
+#pop-close:hover{background:rgba(255,255,255,.04);letter-spacing:.34em}
+
+/* ── Night mode ── */
+body.night{transition:background 2s ease}
+body.night canvas{filter:saturate(.6) brightness(.7)}
+body.night .vig{background:radial-gradient(ellipse 90% 70% at 50% 45%,transparent 20%,rgba(2,4,18,.5) 65%,rgba(2,4,18,.92) 100%)}
+
+/* ── Corner ornament ── */
+.orn-corner{position:fixed;z-index:20;pointer-events:auto;opacity:.95;transition:opacity .4s}
+.orn-corner svg{pointer-events:none;display:block}
+.orn-corner .sun-grp{pointer-events:all}
+.orn-circle{position:absolute;width:80px;height:80px;top:16px;left:140px;transform:translate(-50%,-50%);border:2px solid rgba(255,240,150,.45);border-radius:50%;animation:sun-circle-spin 6s linear infinite;pointer-events:auto;cursor:pointer;z-index:10}
+.orn-circle:hover{border-color:rgba(255,255,0,.9);animation-duration:2.5s}
+#orn-tl{bottom:20px;left:20px;transform-origin:bottom left;transform:scale(1.8);animation:ornament-glow 2.5s ease-in-out infinite}
+#orn-br{display:none}
+@keyframes ornament-glow{0%,100%{filter:drop-shadow(0 0 20px rgba(212,168,67,.6)) drop-shadow(0 0 40px rgba(212,168,67,.3))}50%{filter:drop-shadow(0 0 35px rgba(212,168,67,.95)) drop-shadow(0 0 60px rgba(212,168,67,.6))}}
+
+/* Sun group — hover spin, click morph */
+.sun-grp{cursor:pointer;transform-box:fill-box;transform-origin:184px 22px;
+  transition:opacity .8s ease, filter .3s ease;will-change:transform,filter;position:relative;z-index:1}
+.sun-grp:hover:not(.spin-click){filter:brightness(1.5) drop-shadow(0 0 25px rgba(255,230,0,.8))}
+.sun-grp:active{filter:brightness(.68)}
+.sun-grp.spin-click{animation:sun-spin-click .4s linear;filter:brightness(.68)}
+@keyframes sun-circle-spin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes sun-spin-click{0%{transform:rotate(0deg)}100%{transform:rotate(720deg)}}
+.sun-paths{transition:opacity .8s ease}
+.moon-path{opacity:0;transition:opacity .8s ease;transform-origin:184px 22px}
+body.night .sun-paths{opacity:0}
+body.night .moon-path{opacity:1}
+
+/* ── Fade ── */
+#fade{position:fixed;inset:0;z-index:40;background:#1A1408;
+  opacity:0;pointer-events:none;transition:opacity 1.5s ease}
+#fade.on{opacity:1;pointer-events:all}
+</style>
+</head>
+<body>
+
+<canvas id="cvs"></canvas>
+<div class="vig"></div>
+
+<!-- Corner ornaments — uploaded SVG -->
+<div class="orn-corner" id="orn-tl">
+<svg width="280" height="62" viewBox="0 0 369 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lines & bracket (static) -->
+ <!-- Left star ornament -->
+   <!-- Short line segments -->
+ 
+  <!-- ☀ SUN GROUP — clickable, hover spin, morphs to moon -->
+  <g class="sun-grp" onclick="toggleNight()" title="Basculer nuit / jour">
+    <!-- Sun paths visible by default -->
+    <g class="sun-paths">
+      <path d="M174.933 33.909C171.45 29.5562 169.898 24.5259 172.035 19.1664C173.375 15.7792 176.025 13.0762 179.385 11.67C182.793 10.26 186.62 10.2624 190.026 11.6767C197.428 14.8124 199.793 23.1484 196.629 30.3154C196.209 29.7149 195.573 28.7012 195.035 28.2897C194.991 27.9862 194.937 27.6842 194.875 27.3842C194.26 24.3857 192.421 21.7804 189.801 20.1982C187.499 18.8014 184.728 18.4014 182.125 19.0897C179.325 19.8327 176.943 21.6774 175.523 24.2039C173.57 27.6947 173.993 30.3577 174.933 33.909Z" fill="#F6EFD3"/>
+      <path d="M184.669 33.4341C183.3 32.3813 184.568 31.3739 180.438 29.8819C182.993 29.2716 183.45 29.2029 184.425 26.7396C184.57 26.7139 184.711 26.8019 184.851 26.8431C185.927 29.2406 185.888 28.8921 188.473 29.9109C186.176 30.9966 185.79 31.1736 184.669 33.4341Z" fill="#F6EFD3"/>
+      <path d="M197.175 12.4483L196.608 12.339L196.443 11.894C197.217 10.128 202.883 5.40852 204.676 3.79752L205.082 3.74152C204.881 4.71227 198.33 11.3315 197.175 12.4483Z" fill="#F6EFD3"/>
+      <path d="M172.95 12.5952C170.873 12.006 165.603 5.84448 164.318 3.86348C165.915 4.72823 172.905 10.9412 172.95 12.5952Z" fill="#F6EFD3"/>
+      <path d="M169.04 18.2451C167.763 18.0879 159.948 14.3479 159.298 13.3944C162.013 14.5469 166.44 15.4504 168.898 17.1369C169.188 17.3351 169.055 17.7369 169.04 18.2451Z" fill="#F6EFD3"/>
+      <path d="M200.827 18.127C200.697 18.1015 200.38 17.9407 200.243 17.878L200.249 17.3307C201.298 16.2137 206.574 14.6337 208.458 13.8825L208.849 13.9225C208.407 14.857 202.319 17.4355 200.827 18.127Z" fill="#F6EFD3"/>
+      <path d="M191.346 8.75832C190.836 8.41057 191.039 8.63231 190.737 8.09306C191.121 6.43456 193.312 2.25258 194.2 0.457077L194.472 0.41507C194.728 1.50057 192.153 7.63632 191.346 8.75832Z" fill="#F6EFD3"/>
+      <path d="M178.533 8.76149L177.823 8.5295C176.75 7.42775 174.81 1.643 174.658 0C175.598 1.55875 178.698 7.15799 178.533 8.76149Z" fill="#F6EFD3"/>
+      <path d="M168.17 21.4358C167.39 21.5123 167.18 21.4168 166.448 21.1993L166.075 21.0868C164.983 20.7638 163.508 20.4638 162.978 19.3548C164.288 19.4948 166.88 19.6078 167.86 20.3933C168.21 20.6748 168.1 20.8488 168.17 21.4358Z" fill="#F6EFD3"/>
+      <path d="M175.487 10.4238C174.97 10.2896 174.94 10.2378 174.455 9.99559C173.432 8.69334 172.645 7.1576 172.287 5.5376C172.71 5.9406 173.115 6.35984 173.505 6.79459C174.547 7.96509 175.575 8.92634 175.487 10.4238Z" fill="#F6EFD3"/>
+      <path d="M194.34 10.4561C193.924 10.1183 194.06 10.2483 193.773 9.77608C194.022 8.27283 195.702 6.87833 196.805 5.79633L196.991 5.81407C196.612 7.14682 195.211 9.36382 194.34 10.4561Z" fill="#F6EFD3"/>
+      <path d="M170.8 15.2127C169.448 15.0917 167.175 13.0154 166.438 11.8692C168.35 12.4669 170.335 13.1142 170.8 15.2127Z" fill="#F6EFD3"/>
+      <path d="M194.371 33.999C194.893 31.6763 195.113 30.734 195.035 28.2898C195.573 28.7013 196.209 29.715 196.629 30.3155C195.848 31.7303 195.278 32.662 194.371 33.999Z" fill="#F6EFD3"/>
+      <path d="M199.249 15.158C198.641 14.8972 198.88 15.0967 198.59 14.4732C198.981 13.4472 201.009 12.7025 202.034 12.2362L202.43 12.3925C202.11 13.0382 199.921 14.6302 199.249 15.158Z" fill="#F6EFD3"/>
+    </g>
+    <!-- 🌙 Moon crescent — hidden by default, shows on night -->
+    <g class="moon-path">
+      <path d="M184 5 C174 5 166 13 166 23 C166 33 174 41 184 41 C177 38 172 31 172 23 C172 15 177 8 184 5 Z" fill="#F6EFD3" opacity=".9"/>
+      <circle cx="190" cy="10" r="1.5" fill="#F6EFD3" opacity=".6"/>
+      <circle cx="195" cy="18" r="1" fill="#F6EFD3" opacity=".4"/>
+      <circle cx="188" cy="30" r="1.2" fill="#F6EFD3" opacity=".5"/>
+    </g>
+  </g>
+</svg>
+<div class="orn-circle" onclick="toggleNight()"></div>
+</div>
+
+<!-- Bottom-right: same SVG, rotated 180° -->
+<div class="orn-corner" id="orn-br">
+<svg width="280" height="62" viewBox="0 0 369 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M23.99 23.5773C31.6625 23.1735 41.28 23.39 49.12 23.2698L68.0099 22.9718C71.1299 22.9053 76.5149 22.4223 79.6899 23.047C80.2399 23.1548 80.4599 23.5705 80.6274 24.0665C79.7799 26.302 76.0524 25.4388 74.0299 25.4063L61.2849 25.2318L22.6175 24.5775C21.54 24.436 19.5599 24.0548 18.6599 23.9828C19.5724 23.9388 23.5525 23.9235 23.99 23.5773Z" fill="#F6EFD3"/>
+  <path d="M2 24.7015C2.42264 32.3727 2.31018 42.6593 2.43605 50.498L2.748 69.3847C2.81761 72.5042 3.32321 77.8882 2.66922 81.0627C2.55643 81.6126 2.12124 81.8325 1.60203 82C-0.738062 81.1527 0.165575 77.4258 0.199596 75.4036L0.38226 62.6608L1 24.7015C1.14812 23.6242 1.52666 24.8999 1.60203 24C1.64809 24.9124 1.63755 24.2641 2 24.7015Z" fill="#F6EFD3"/>
+  <path d="M350.474 24.3453C339.175 25.059 325.764 24.9295 314.236 25.107L298.91 25.3778C297.16 25.4075 288.478 26.2148 288.435 24.0405C289.441 23.0148 290.927 22.746 292.321 22.7698C296.573 22.8428 300.853 22.94 305.104 23.025C314.392 23.227 323.681 23.3565 332.97 23.4138C336.025 23.9593 348.952 23.2145 350.474 24.3453Z" fill="#F6EFD3"/>
+  <path d="M332.97 23.4138C334.788 23.3063 336.878 23.3336 338.706 23.3841C348.525 23.6543 358.497 23.2346 368.3 23.4971L368.465 23.7218C366.495 24.0993 352.384 24.5576 350.474 24.3453C348.952 23.2146 336.025 23.9593 332.97 23.4138Z" fill="#F6EFD3"/>
+  <path d="M22.6177 24.5773C19.0952 24.7193 14.6977 24.4443 11.1102 24.3108C7.98023 24.1946 4.03524 24.7713 1.00024 24.5L1.13522 23.7291C6.71272 23.6251 12.3152 23.4201 17.8902 23.4448C19.0752 23.4501 22.9802 23.3898 23.9902 23.5771C23.5527 23.9233 19.5727 23.9386 18.6602 23.9826C19.5602 24.0546 21.5402 24.4358 22.6177 24.5773Z" fill="#F6EFD3"/>
+  <path d="M93.5802 29.4269L92.2652 29.5154C89.2602 28.3554 88.3277 28.2759 87.5777 24.7161C87.4952 24.3216 87.5027 24.4314 87.2027 24.0449L87.1301 23.7971C87.2151 23.7176 87.3001 23.6404 87.3826 23.5586C87.6901 23.2506 87.8152 22.9444 87.9902 22.5546C89.0802 20.1419 92.3476 19.1431 92.4051 18.5179C92.4776 17.7116 92.4977 17.0344 92.9252 16.3246L93.2526 16.2774C93.8301 18.2204 92.6627 18.6196 94.8552 19.7171C95.7577 20.1689 96.8251 21.2119 97.5976 21.5994C98.3876 21.7516 98.5476 21.9674 99.2576 22.4146C103.668 20.6136 103.973 27.5951 99.2702 25.7281C98.4327 26.1419 98.4127 26.2129 97.4527 26.2699C97.3352 26.3451 97.0801 26.4949 97.0376 26.6031C96.3976 28.1679 95.1677 28.6864 93.5802 29.4269Z" fill="#F6EFD3"/>
+  <path d="M93.7402 27.3948C89.8252 27.1655 87.8727 23.6055 91.5652 21.1535C96.4952 20.9335 97.3002 25 93.7402 27.3948Z" fill="#F6EFD3"/>
+  <path d="M87.2026 24.0448C86.3951 25.4531 85.7601 26.6631 83.9801 26.1551C82.6801 24.8853 82.5401 22.2298 84.8251 21.9758C86.1676 22.4743 86.3101 22.5908 87.1301 23.7971L87.2026 24.0448Z" fill="#F6EFD3"/>
+  <path d="M276.829 29.4486L276.174 32.8201L275.963 32.7233C275.249 31.3741 275.962 30.9008 275.589 29.2246C275.048 28.5731 273.569 28.5731 272.415 28.0361L272.537 27.1101C272.235 26.4361 272.465 26.7163 271.693 26.3746C270.66 25.9548 270.662 26.1488 270.14 25.3898C269.46 26.2558 268.216 26.4283 267.326 25.7801C266.436 25.1316 266.218 23.8951 266.834 22.9818C267.449 22.0688 268.677 21.8068 269.612 22.3888C270.531 21.9741 270.995 21.5206 272.023 21.6158C273.614 20.2903 273.342 19.9436 275.742 19.1611C276.138 19.0556 276.781 19.0918 277.219 19.0896C278.282 19.5626 279.999 20.5098 280.708 21.4306C282.39 23.6133 280.86 25.6883 280.629 28.0341C280.235 28.4166 277.711 29.1073 276.829 29.4486Z" fill="#F6EFD3"/>
+  <path d="M270.14 25.3899C269.46 26.2559 268.216 26.4284 267.326 25.7802C266.436 25.1317 266.218 23.8952 266.834 22.9819C267.449 22.0689 268.677 21.8069 269.612 22.3889C270.106 22.6964 270.445 23.1992 270.546 23.7717C270.646 24.3442 270.499 24.9327 270.14 25.3899Z" fill="#F6EFD3"/>
+  <path d="M276.882 27.5847C272.449 26.5287 271.912 22.4302 276.042 21.049C280.785 21.328 280.744 25.3467 276.882 27.5847Z" fill="#F6EFD3"/>
+  <path d="M285.275 25.9646C284.295 26.4528 283.105 26.0926 282.56 25.1428C282.015 24.1931 282.305 22.9833 283.221 22.3838C283.864 21.9638 284.686 21.9338 285.357 22.3066C286.028 22.6791 286.437 23.3928 286.42 24.1603C286.403 24.9276 285.962 25.6223 285.275 25.9646Z" fill="#F6EFD3"/>
+  <path d="M135.503 23.5912C139.728 23.8775 145.568 22.7792 149.92 22.7495C150.735 22.744 151.29 23.1817 151.803 23.7522C151.99 24.5427 152.053 24.1915 151.678 24.8505C149.69 26.094 138.33 24.6052 135.338 24.3152L135.503 23.5912Z" fill="#F6EFD3"/>
+  <path d="M249.406 23.5901C252.984 23.6316 261.008 22.4163 263.657 23.0105C264.329 23.5443 264.764 23.8343 264.392 24.671C262.289 26.1475 251.29 24.6388 248.161 24.3008L249.406 23.5901Z" fill="#F6EFD3"/>
+  <path d="M233.115 24.3106C228.974 24.8526 223.468 25.2636 219.219 25.4771C218.747 25.5009 218.126 25.0589 217.742 24.7754C217.291 23.9376 217.324 24.3469 217.489 23.5269C218.941 22.1884 229.805 23.6331 232.624 23.5719L233.115 24.3106Z" fill="#F6EFD3"/>
+  <path d="M120.125 24.3431C117.182 24.6856 106.943 26.1719 104.943 24.6914C104.625 23.8879 104.643 24.2906 104.928 23.4406C105.145 23.2831 105.365 23.1256 105.583 22.9681C110.373 22.5944 115.083 23.6344 119.945 23.5786L120.125 24.3431Z" fill="#F6EFD3"/>
+  <path d="M167.8 24.8865C163.89 24.8055 160.36 24.453 156.493 23.9965L156.51 23.68C159.37 23.5312 164.658 23.1517 167.338 23.4095C167.92 23.9262 167.728 23.8092 167.8 24.8865Z" fill="#F6EFD3"/>
+  <path d="M203.913 24.7466C202.714 24.8474 201.81 25.2526 201.502 24.0086L201.765 23.5999C203.375 23.3829 208.335 23.4889 210.418 23.4476C211.408 23.4324 211.413 23.3954 212.332 23.6939C211.477 24.3104 205.348 24.6341 203.913 24.7466Z" fill="#F6EFD3"/>
+  <path d="M132.018 24.0901C130.618 24.7951 129.413 25.6341 128.54 26.9741L128.395 26.7841C127.093 25.0961 126.515 24.6896 124.753 23.6944C127.753 23.1786 127.6 23.1884 128.4 20.3121C129.283 22.0816 129.463 23.0891 131.515 23.6474L132.018 24.0901Z" fill="#F6EFD3"/>
+  <path d="M244.544 23.7576C242.158 25.0089 242.237 25.8409 240.701 26.8389C239.936 26.5459 238.792 24.9501 237.913 24.2401L237.682 23.6554C239.463 23.1621 239.505 23.0671 240.28 21.3561L240.426 21.0249C241.638 20.9679 240.599 23.0161 244.196 23.6949L244.544 23.7576Z" fill="#F6EFD3"/>
+  <!-- Sun/moon group (bottom-right, mirrored by parent rotate) -->
+  <g class="sun-grp" onclick="toggleNight()" title="Basculer nuit / jour">
+    <g class="sun-paths">
+      <path d="M174.933 33.909C171.45 29.5562 169.898 24.5259 172.035 19.1664C173.375 15.7792 176.025 13.0762 179.385 11.67C182.793 10.26 186.62 10.2624 190.026 11.6767C197.428 14.8124 199.793 23.1484 196.629 30.3154C196.209 29.7149 195.573 28.7012 195.035 28.2897C194.991 27.9862 194.937 27.6842 194.875 27.3842C194.26 24.3857 192.421 21.7804 189.801 20.1982C187.499 18.8014 184.728 18.4014 182.125 19.0897C179.325 19.8327 176.943 21.6774 175.523 24.2039C173.57 27.6947 173.993 30.3577 174.933 33.909Z" fill="#F6EFD3"/>
+      <path d="M184.669 33.4341C183.3 32.3813 184.568 31.3739 180.438 29.8819C182.993 29.2716 183.45 29.2029 184.425 26.7396C184.57 26.7139 184.711 26.8019 184.851 26.8431C185.927 29.2406 185.888 28.8921 188.473 29.9109C186.176 30.9966 185.79 31.1736 184.669 33.4341Z" fill="#F6EFD3"/>
+      <path d="M197.175 12.4483L196.608 12.339L196.443 11.894C197.217 10.128 202.883 5.40852 204.676 3.79752L205.082 3.74152C204.881 4.71227 198.33 11.3315 197.175 12.4483Z" fill="#F6EFD3"/>
+      <path d="M172.95 12.5952C170.873 12.006 165.603 5.84448 164.318 3.86348C165.915 4.72823 172.905 10.9412 172.95 12.5952Z" fill="#F6EFD3"/>
+      <path d="M169.04 18.2451C167.763 18.0879 159.948 14.3479 159.298 13.3944C162.013 14.5469 166.44 15.4504 168.898 17.1369C169.188 17.3351 169.055 17.7369 169.04 18.2451Z" fill="#F6EFD3"/>
+      <path d="M200.827 18.127C200.697 18.1015 200.38 17.9407 200.243 17.878L200.249 17.3307C201.298 16.2137 206.574 14.6337 208.458 13.8825L208.849 13.9225C208.407 14.857 202.319 17.4355 200.827 18.127Z" fill="#F6EFD3"/>
+      <path d="M191.346 8.75832C190.836 8.41057 191.039 8.63231 190.737 8.09306C191.121 6.43456 193.312 2.25258 194.2 0.457077L194.472 0.41507C194.728 1.50057 192.153 7.63632 191.346 8.75832Z" fill="#F6EFD3"/>
+      <path d="M178.533 8.76149L177.823 8.5295C176.75 7.42775 174.81 1.643 174.658 0C175.598 1.55875 178.698 7.15799 178.533 8.76149Z" fill="#F6EFD3"/>
+      <path d="M194.371 33.999C194.893 31.6763 195.113 30.734 195.035 28.2898C195.573 28.7013 196.209 29.715 196.629 30.3155C195.848 31.7303 195.278 32.662 194.371 33.999Z" fill="#F6EFD3"/>
+    </g>
+    <g class="moon-path">
+      <path d="M184 5 C174 5 166 13 166 23 C166 33 174 41 184 41 C177 38 172 31 172 23 C172 15 177 8 184 5 Z" fill="#F6EFD3" opacity=".9"/>
+      <circle cx="190" cy="10" r="1.5" fill="#F6EFD3" opacity=".6"/>
+      <circle cx="195" cy="18" r="1" fill="#F6EFD3" opacity=".4"/>
+      <circle cx="188" cy="30" r="1.2" fill="#F6EFD3" opacity=".5"/>
+    </g>
+  </g>
+</svg>
+</div>
+
+<!-- Sound button -->
+<button id="sound-btn" onclick="toggleSound()">
+  <span id="sound-icon">♪</span>
+  <span id="sound-lbl">Son</span>
+</button>
+
+<!-- Dots -->
+<div id="dots">
+  <div class="dot active"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+</div>
+
+<!-- ═══ SCÈNE 0 — INTRO ══════════════════════════════ -->
+<div class="scene active" id="s0">
+  <p class="eyebrow" id="s0-ey" style="opacity:0;transition:opacity 1s .2s">Le Voyage de l'Âme</p>
+  <h1 id="s0-title">ÂME</h1>
+  <p id="s0-sub">inspiré de L'Alchimiste · Paulo Coelho</p>
+  <hr class="orn" style="opacity:0;transition:opacity 1.2s ease" id="s0-hr">
+  <div id="s0-q" style="max-width:min(560px,85vw);text-align:center">
+    <p class="serif big" id="s0-quote"></p>
+  </div>
+  <hr class="orn" style="opacity:0;transition:opacity 1.2s ease" id="s0-hr2">
+  <div id="s0-cta" style="opacity:0;transition:opacity 1s ease">
+    <button class="btn" onclick="toScene(1)">Commencer</button>
+  </div>
+</div>
+
+<!-- ═══ SCÈNE 1 — CHOIX ══════════════════════════════ -->
+<div class="scene" id="s1">
+  <p class="eyebrow">Quelle force t'a mis en route ?</p>
+  <h2 class="serif big" style="max-width:min(480px,85vw);text-align:center;margin-bottom:2.6rem">
+    Santiago s'arrête au seuil du désert.<br>
+    <span class="gold">Trois portes.</span> Une seule vérité.
+  </h2>
+  <div class="arches" id="arches">
+
+    <div class="arch" onclick="pick('reve')">
+      <svg class="arch-gate" viewBox="0 0 100 170"><path class="fl" d="M10 170L10 68Q10 8 50 8Q90 8 90 68L90 170Z"/><path class="bd" d="M10 170L10 68Q10 8 50 8Q90 8 90 68L90 170"/><circle cx="50" cy="8" r="4" fill="#8B6FD4" opacity=".7"/></svg>
+      <div class="arch-lbl">
+        <span class="arch-ic" style="color:#8B6FD4">🌙</span>
+        <span class="arch-nm">Un Rêve</span>
+        <span class="dim" style="margin-top:0">le visionnaire</span>
+      </div>
+    </div>
+
+    <div class="arch" onclick="pick('peur')">
+      <svg class="arch-gate" viewBox="0 0 120 200"><path class="fl" d="M10 200L10 80Q10 8 60 8Q110 8 110 80L110 200Z"/><path class="bd" d="M10 200L10 80Q10 8 60 8Q110 8 110 80L110 200"/><circle cx="60" cy="8" r="5" fill="#5A7FA8" opacity=".6"/><circle cx="60" cy="8" r="9" fill="none" stroke="#5A7FA8" stroke-width=".5" opacity=".25"/></svg>
+      <div class="arch-lbl">
+        <span class="arch-ic" style="color:#5A7FA8">🌪️</span>
+        <span class="arch-nm">Une Peur</span>
+        <span class="dim" style="margin-top:0">le courageux</span>
+      </div>
+    </div>
+
+    <div class="arch" onclick="pick('sens')">
+      <svg class="arch-gate" viewBox="0 0 100 170"><path class="fl" d="M10 170L10 68Q10 8 50 8Q90 8 90 68L90 170Z"/><path class="bd" d="M10 170L10 68Q10 8 50 8Q90 8 90 68L90 170"/><circle cx="50" cy="8" r="4" fill="#D4A843" opacity=".9"/><g stroke="#D4A843" stroke-width=".6" opacity=".55"><line x1="50" y1="-2" x2="50" y2="1"/><line x1="57" y1="1" x2="60" y2="-1"/><line x1="43" y1="1" x2="40" y2="-1"/></g></svg>
+      <div class="arch-lbl">
+        <span class="arch-ic" style="color:#D4A843">✨</span>
+        <span class="arch-nm">Un Sens</span>
+        <span class="dim" style="margin-top:0">le chercheur</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FX layers -->
+<canvas id="lucioles"></canvas>
+<div id="rays"></div>
+
+<!-- ═══ SCÈNE 2 — ÉPREUVE ═════════════════════════════ -->
+<div class="scene" id="s2">
+  <div id="s2-card-inner" style="text-align:center;max-width:min(520px,88vw)">
+    <p class="eyebrow" id="s2-ey">L'Épreuve</p>
+    <p class="serif big" id="s2-txt"></p>
+    <p class="dim" id="s2-sub" style="margin-top:.5rem;margin-bottom:2.2rem"></p>
+    <button class="btn" onclick="toScene(3)">Avancer</button>
+  </div>
+</div>
+
+<!-- ═══ SCÈNE 3 — FINALE ══════════════════════════════ -->
+<div class="scene" id="s3">
+  <p class="eyebrow">Le Miroir de l'Âme</p>
+  <div class="hex-wrap">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <polygon id="h1" points="50,4 94,27 94,73 50,96 6,73 6,27" fill="none" stroke-width=".8"/>
+      <polygon id="h2" points="50,16 84,33 84,67 50,84 16,67 16,33" fill="none" stroke-width=".4" opacity=".4"/>
+    </svg>
+    <div class="hex-glow" id="hglow"></div>
+  </div>
+  <span id="final-arch">Archétype · —</span>
+  <div class="final-wrap">
+    <p class="serif med" id="s3-txt" style="margin-bottom:1rem"></p>
+    <p class="dim" id="s3-sub"></p>
+  </div>
+  <br>
+  <button class="btn" onclick="toScene(1)" style="margin-top:.8rem">Revivre</button>
+  <button class="restart" onclick="restart()">↺ Un autre chemin</button>
+</div>
+
+<!-- ═══ POPUP ══════════════════════════════════════════ -->
+<div id="pop" onclick="closePop()">
+  <div id="pop-box" onclick="event.stopPropagation()">
+    <span id="pop-ic">✦</span>
+    <p id="pop-title"></p>
+    <p id="pop-body"></p>
+    <button id="pop-close" onclick="closePop()">Continuer</button>
+  </div>
+</div>
+
+<div id="fade"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  BRANCH DATA
+// ═══════════════════════════════════════════════════════
+const BRANCHES = {
+  reve:{
+    c:'#8B6FD4',cr:'139,111,212',
+    archetype:'Le Visionnaire',
+    popIc:'🌙',popTitle:'Le Rêve t\'a choisi',
+    popBody:'« Le rêve est la langue que l\'univers utilise avant les mots. L\'Âme parle d\'abord en images. »',
+    s2ey:'Le Désert Onirique',
+    s2txt:'Le désert ondule comme un songe.\nSantiago reconnaît ces dunes — il les a déjà traversées la nuit, les yeux fermés.',
+    s2sub:'Ici le rêve et le réel ne font qu\'un.',
+    choices:[
+      {ic:'◈',lbl:'S\'allonger dans le sable',sub:'abandonner le corps au désert',key:'abandon',
+       popIc:'◈',popT:'L\'Abandon',popB:'« Celui qui se laisse porter par le désert découvre que le désert le portait depuis toujours. »'},
+      {ic:'✦',lbl:'Chercher le visage dans les dunes',sub:'lire les formes comme des présages',key:'vision',
+       popIc:'✦',popT:'La Vision',popB:'« Les formes que tu vois sont les pensées que l\'univers n\'a pas encore prononcées. »'},
+    ],
+    finalTxt:'Le Visionnaire ne cherche pas — il reconnaît.',
+    finalSub:'Chaque rêve était une carte vers ici.',hexC:'#8B6FD4',hexCr:'139,111,212',
+  },
+  peur:{
+    c:'#5A7FA8',cr:'90,127,168',
+    archetype:'Le Courageux',
+    popIc:'🌪️',popTitle:'La Peur t\'a guidé',
+    popBody:'« La peur est une boussole déguisée. Elle indique toujours exactement ce qui compte le plus pour toi. »',
+    s2ey:'Le Désert du Doute',
+    s2txt:'Le vent se lève. Les dunes changent de forme.\nSantiago ne sait plus si le chemin existe encore.',
+    s2sub:'Le désert met à l\'épreuve ceux qui doutent.',
+    choices:[
+      {ic:'↑',lbl:'Avancer malgré les ombres',sub:'le courage n\'est pas l\'absence de peur',key:'avancer',
+       popIc:'↑',popT:'Le Pas',popB:'« Un seul pas en avant dans l\'obscurité vaut mille pensées à la lumière. »'},
+      {ic:'⊙',lbl:'Nommer sa peur à voix haute',sub:'la dissoudre en la regardant en face',key:'nommer',
+       popIc:'⊙',popT:'Le Nom',popB:'« Ce que tu nommes perd son empire sur toi. La peur n\'existe que dans le silence qu\'on lui accorde. »'},
+    ],
+    finalTxt:'Celui qui traversait la peur a trouvé sa liberté.',
+    finalSub:'Le doute était le chemin, pas l\'obstacle.',hexC:'#5A7FA8',hexCr:'90,127,168',
+  },
+  sens:{
+    c:'#D4A843',cr:'212,168,67',
+    archetype:'Le Chercheur',
+    popIc:'✨',popTitle:'Le Sens t\'a appelé',
+    popBody:'« Chercher le sens, c\'est déjà le trouver à moitié. L\'univers conspire pour qui a une raison de marcher. »',
+    s2ey:'Le Désert Lumineux',
+    s2txt:'Chaque grain de sable scintille.\nSantiago comprend que le désert entier lui parle — il faut savoir l\'écouter.',
+    s2sub:'La quête est la réponse.',
+    choices:[
+      {ic:'☀',lbl:'Lire les signes du ciel',sub:'les étoiles sont un alphabet ancien',key:'ciel',
+       popIc:'☀',popT:'Les Signes',popB:'« Le ciel est le livre le plus vieux du monde. Ceux qui savent le lire ne se perdent jamais. »'},
+      {ic:'⊕',lbl:'Poser la main sur la terre',sub:'ressentir le pouls de l\'univers',key:'terre',
+       popIc:'⊕',popT:'La Terre',popB:'« Sous tes doigts bat le cœur de tout ce qui existe. Tu n\'étais pas perdu — tu étais en chemin. »'},
+    ],
+    finalTxt:'Le Chercheur a trouvé ce qu\'il cherchait — lui-même.',
+    finalSub:'L\'Alchimiste sourit. Le Mektoub était écrit.',hexC:'#D4A843',hexCr:'212,168,67',
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let branch=null, audioCtx=null, windNode=null, soundOn=false;
+
+// ═══════════════════════════════════════════════════════
+//  DESERT CANVAS
+// ═══════════════════════════════════════════════════════
+const cvs=document.getElementById('cvs'),ctx=cvs.getContext('2d');
+let W,H,T=0,grains=[],stars=[];
+let sunHover=false;
+
+function initCanvas(){
+  W=cvs.width=innerWidth; H=cvs.height=innerHeight;
+  stars=Array.from({length:180},()=>({
+    x:Math.random(),y:Math.random()*.55,
+    s:Math.random()*1.3+.2,o:Math.random()*.65+.1,
+    ph:Math.random()*Math.PI*2,sp:.007+Math.random()*.016,gold:Math.random()>.8
+  }));
+  const hy=H*.6;
+  grains=Array.from({length:70},()=>mkGrain(false,hy));
+}
+function mkGrain(fromLeft,hy){
+  return{x:fromLeft?-3:Math.random()*W,
+    y:hy+Math.random()*H*.35,
+    vx:.5+Math.random()*1.0,vy:(Math.random()-.6)*.12,
+    s:Math.random()*1.6+.3,o:Math.random()*.3+.05};
+}
+let shoot=null,stTimer=250;
+
+function getCanvasPoint(evt){
+  const rect=cvs.getBoundingClientRect();
+  return {x:evt.clientX-rect.left,y:evt.clientY-rect.top};
+}
+function isSunPoint(x,y){
+  const mx=W*.8,my=H*.12,mr=Math.min(W,H)*.036;
+  return Math.hypot(x-mx,y-my) <= mr*2.1;
+}
+function updateSunHover(x,y){
+  const hover = isSunPoint(x,y);
+  if(sunHover!==hover){
+    sunHover=hover;
+    cvs.style.cursor = hover ? 'pointer' : 'default';
+  }
+}
+
+cvs.addEventListener('mousemove',e=>{
+  const pt=getCanvasPoint(e);
+  updateSunHover(pt.x,pt.y);
+});
+cvs.addEventListener('mouseleave',()=>{
+  sunHover=false; cvs.style.cursor='default';
+});
+cvs.addEventListener('click',e=>{
+  const pt=getCanvasPoint(e);
+  if(isSunPoint(pt.x,pt.y)) toggleNight();
+});
+
+function drawFrame(){
+  T++;ctx.clearRect(0,0,W,H);
+  // Sky gradient — warm desert palette, shifts to deep night when toggled
+  const sk=ctx.createLinearGradient(0,0,0,H*.65);
+  if(isNight){
+    sk.addColorStop(0,'#020408');sk.addColorStop(.3,'#040810');
+    sk.addColorStop(.65,'#0A1020');sk.addColorStop(1,'#1A1010');
+  } else {
+    sk.addColorStop(0,'#1A1510');sk.addColorStop(.3,'#2A2018');
+    sk.addColorStop(.65,'#4A3010');sk.addColorStop(1,'#6B4010');
+  }
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H*.65);
+
+  // Horizon warm glow
+  const hc={reve:'rgba(80,50,160,.16)',peur:'rgba(30,55,110,.18)',sens:'rgba(180,100,20,.22)',null:'rgba(140,90,20,.14)'};
+  const hy=H*.6;
+  const hg=ctx.createLinearGradient(0,hy-H*.15,0,hy+H*.08);
+  hg.addColorStop(0,'rgba(0,0,0,0)');hg.addColorStop(.5,hc[branch]||hc['null']);hg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=hg;ctx.fillRect(0,hy-H*.15,W,H*.23);
+
+  // Stars
+  for(const s of stars){
+    const tw=Math.sin(T*s.sp+s.ph)*.25;
+    ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.s,0,Math.PI*2);
+    ctx.fillStyle=s.gold?'#E8C97A':'#D8D0C0';
+    ctx.globalAlpha=Math.max(.04,Math.min(.9,s.o+tw));ctx.fill();
+  }ctx.globalAlpha=1;
+
+  // SUN/MOON
+  const mx=W*.8,my=H*.12,mr=Math.min(W,H)*.036;
+  
+  if(isNight){
+    // MOON — crescent shape on dark sky
+    ctx.beginPath();
+    ctx.arc(mx,my,mr,0,Math.PI*2);
+    ctx.fillStyle='#F5F0E1';ctx.fill();
+    
+    // Shadow to create crescent
+    ctx.beginPath();
+    ctx.arc(mx+mr*.35,my,mr*.95,0,Math.PI*2);
+    ctx.fillStyle='#020408';ctx.fill();
+    
+    // Glow around moon
+    const moonGlow=ctx.createRadialGradient(mx,my,mr,mx,my,mr*2.2);
+    moonGlow.addColorStop(0,'rgba(245,240,225,0.08)');
+    moonGlow.addColorStop(1,'rgba(245,240,225,0)');
+    ctx.fillStyle=moonGlow;ctx.fillRect(mx-mr*2.2,my-mr*2.2,mr*4.4,mr*4.4);
+  } else {
+    // SUN — yellow by default, blue on hover
+    const sunColors = sunHover
+      ? { glow: ['rgba(140,180,255,0.06)','rgba(140,180,255,0.035)','rgba(140,180,255,0.016)'], core: ['#E5F1FF','#8FB8FF','#4C7CD8'] }
+      : { glow: ['rgba(255,220,130,0.06)','rgba(255,220,130,0.035)','rgba(255,220,130,0.016)'], core: ['#FFF1C8','#F2D27A','#C89A34'] };
+    [.06,.035,.016].forEach((a,i)=>{
+      ctx.beginPath();ctx.arc(mx,my,mr*(2.1-i*.3),0,Math.PI*2);
+      ctx.fillStyle=sunColors.glow[i];ctx.fill();
+    });
+    const mg=ctx.createRadialGradient(mx-mr*.2,my-mr*.2,mr*.08,mx,my,mr);
+    mg.addColorStop(0,sunColors.core[0]);mg.addColorStop(.55,sunColors.core[1]);mg.addColorStop(1,sunColors.core[2]);
+    ctx.beginPath();ctx.arc(mx,my,mr,0,Math.PI*2);ctx.fillStyle=mg;ctx.fill();
+  }
+
+  // Shooting star
+  stTimer--;
+  if(stTimer<=0){stTimer=300+Math.floor(Math.random()*500);
+    shoot={x:Math.random()*W*.7+W*.05,y:Math.random()*H*.22,len:70+Math.random()*80,a:.35+Math.random()*.3,life:1};
+  }
+  if(shoot){
+    shoot.life-=.035;
+    if(shoot.life<=0){shoot=null;}else{
+      const ex=shoot.x+Math.cos(shoot.a)*shoot.len,ey=shoot.y+Math.sin(shoot.a)*shoot.len;
+      const sg=ctx.createLinearGradient(shoot.x,shoot.y,ex,ey);
+      sg.addColorStop(0,'rgba(255,240,180,0)');sg.addColorStop(.5,`rgba(255,240,180,${shoot.life*.65})`);sg.addColorStop(1,'rgba(255,240,180,0)');
+      ctx.beginPath();ctx.moveTo(shoot.x,shoot.y);ctx.lineTo(ex,ey);
+      ctx.strokeStyle=sg;ctx.lineWidth=1.1;ctx.stroke();
+      shoot.x+=Math.cos(shoot.a)*16;shoot.y+=Math.sin(shoot.a)*16;
+    }
+  }
+
+  // Dunes — warm amber/sienna palette from reference image
+  // Layer 4 far
+  ctx.beginPath();ctx.moveTo(0,hy-8);
+  ctx.bezierCurveTo(W*.2,hy-62,W*.38,hy-18,W*.55,hy-45);
+  ctx.bezierCurveTo(W*.7,hy-65,W*.85,hy-22,W,hy-35);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle='#1E160A';ctx.fill();
+
+  // Layer 3
+  ctx.beginPath();ctx.moveTo(0,hy+15);
+  ctx.bezierCurveTo(W*.14,hy-42,W*.32,hy+8,W*.5,hy-32);
+  ctx.bezierCurveTo(W*.66,hy-58,W*.83,hy-8,W,hy-25);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle='#261A0C';ctx.fill();
+
+  // Layer 2 — mid dunes with warm sand color
+  ctx.beginPath();ctx.moveTo(0,hy+35);
+  ctx.bezierCurveTo(W*.1,hy-20,W*.26,hy+28,W*.42,hy+2);
+  ctx.bezierCurveTo(W*.57,hy-38,W*.74,hy+18,W*.87,hy-8);
+  ctx.bezierCurveTo(W*.93,hy-22,W,hy+8,W,hy+12);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  const dg2=ctx.createLinearGradient(0,hy-40,0,hy+35);
+  dg2.addColorStop(0,'#3D250E');dg2.addColorStop(1,'#2A1808');
+  ctx.fillStyle=dg2;ctx.fill();
+  // ridge light
+  ctx.beginPath();ctx.moveTo(0,hy+35);
+  ctx.bezierCurveTo(W*.1,hy-20,W*.26,hy+28,W*.42,hy+2);
+  ctx.bezierCurveTo(W*.57,hy-38,W*.74,hy+18,W*.87,hy-8);
+  ctx.bezierCurveTo(W*.93,hy-22,W,hy+8,W,hy+12);
+  ctx.strokeStyle='rgba(190,140,60,.11)';ctx.lineWidth=1.2;ctx.stroke();
+
+  // Layer 1 — foreground, richest sand color
+  ctx.beginPath();ctx.moveTo(0,hy+72);
+  ctx.bezierCurveTo(W*.07,hy+28,W*.2,hy+88,W*.36,hy+52);
+  ctx.bezierCurveTo(W*.5,hy+22,W*.63,hy+72,W*.78,hy+48);
+  ctx.bezierCurveTo(W*.88,hy+32,W,hy+52,W,hy+62);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  const dg1=ctx.createLinearGradient(0,hy+20,0,H);
+  dg1.addColorStop(0,'#5C3512');dg1.addColorStop(.3,'#3E2208');dg1.addColorStop(1,'#221205');
+  ctx.fillStyle=dg1;ctx.fill();
+  // foreground ridge
+  ctx.beginPath();ctx.moveTo(0,hy+72);
+  ctx.bezierCurveTo(W*.07,hy+28,W*.2,hy+88,W*.36,hy+52);
+  ctx.bezierCurveTo(W*.5,hy+22,W*.63,hy+72,W*.78,hy+48);
+  ctx.bezierCurveTo(W*.88,hy+32,W,hy+52,W,hy+62);
+  ctx.strokeStyle='rgba(220,170,80,.18)';ctx.lineWidth=1.8;ctx.stroke();
+
+  // Sand grains
+  for(const g of grains){
+    g.x+=g.vx;g.y+=g.vy+Math.sin(T*.011+g.x*.009)*.1;
+    if(g.x>W+4)Object.assign(g,mkGrain(true,hy));
+    ctx.beginPath();ctx.arc(g.x,g.y,g.s,0,Math.PI*2);
+    ctx.fillStyle='#C9903A';
+    ctx.globalAlpha=g.o*(.45+Math.sin(T*.007+g.x*.02)*.28);ctx.fill();
+  }ctx.globalAlpha=1;
+
+  requestAnimationFrame(drawFrame);
+}
+
+// ═══════════════════════════════════════════════════════
+//  AMBIENT SOUND — Web Audio API wind
+// ═══════════════════════════════════════════════════════
+function startSound(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const bufSz=audioCtx.sampleRate*2;
+  const buf=audioCtx.createBuffer(1,bufSz,audioCtx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<bufSz;i++)data[i]=(Math.random()*2-1);
+  // Wind source
+  windNode=audioCtx.createBufferSource();
+  windNode.buffer=buf;windNode.loop=true;
+  const lp=audioCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=320;lp.Q.value=.4;
+  const hp=audioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=60;
+  const gain=audioCtx.createGain();gain.gain.value=.09;
+  // Slow tremolo
+  const lfo=audioCtx.createOscillator();lfo.frequency.value=.08;
+  const lfoGain=audioCtx.createGain();lfoGain.gain.value=.04;
+  lfo.connect(lfoGain);lfoGain.connect(gain.gain);lfo.start();
+  windNode.connect(lp);lp.connect(hp);hp.connect(gain);gain.connect(audioCtx.destination);
+  windNode.start();
+}
+function stopSound(){
+  if(!windNode)return;
+  windNode.stop();windNode=null;
+  audioCtx.close();audioCtx=null;
+}
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById('sound-icon').textContent=soundOn?'♫':'♪';
+  document.getElementById('sound-lbl').textContent=soundOn?'Silence':'Son';
+  soundOn?startSound():stopSound();
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function toScene(n){
+  const f=document.getElementById('fade');f.classList.add('on');
+  setTimeout(()=>{
+    if(n!==2)clearFx();
+    document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+    document.getElementById('s'+n).classList.add('active');
+    document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));
+    if(n===1)initS1();
+    if(n===3)initS3();
+    setTimeout(()=>f.classList.remove('on'),80);
+  },700);
+}
+
+function initS1(){
+  document.getElementById('dots').style.opacity='1';
+  document.querySelectorAll('.arch').forEach((a,i)=>{
+    a.classList.remove('vis');
+    setTimeout(()=>a.classList.add('vis'),180+i*140);
+  });
+}
+
+function initS3(){
+  const d=BRANCHES[branch];if(!d)return;
+  document.documentElement.style.setProperty('--c1',d.hexC);
+  document.documentElement.style.setProperty('--c1r',d.hexCr);
+  document.getElementById('final-arch').textContent='Archétype · '+d.archetype;
+  document.getElementById('s3-txt').textContent=d.finalTxt;
+  document.getElementById('s3-sub').textContent=d.finalSub;
+  document.getElementById('h1').setAttribute('stroke',d.hexC);
+  document.getElementById('h2').setAttribute('stroke',d.hexC);
+  document.getElementById('hglow').style.background=
+    `radial-gradient(circle,rgba(${d.hexCr},.28) 0%,transparent 70%)`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  VISUAL FX ENGINE
+// ═══════════════════════════════════════════════════════
+
+// Lucioles (fireflies) for rêve
+let lucCanvas,lucCtx,lucs=[],lucAF;
+function startLucioles(){
+  lucCanvas=document.getElementById('lucioles');
+  lucCtx=lucCanvas.getContext('2d');
+  lucCanvas.width=innerWidth;lucCanvas.height=innerHeight;
+  lucs=Array.from({length:55},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,
+    r:Math.random()*2.5+.8,o:Math.random(),op:Math.random()>.5?1:-1,
+    os:.008+Math.random()*.015,hue:260+Math.random()*40
+  }));
+  lucCanvas.classList.add('show');
+  function loop(){
+    lucCtx.clearRect(0,0,lucCanvas.width,lucCanvas.height);
+    for(const l of lucs){
+      l.x+=l.vx+Math.sin(Date.now()*.0008+l.y*.01)*.3;
+      l.y+=l.vy+Math.cos(Date.now()*.0006+l.x*.01)*.25;
+      if(l.x<0)l.x=lucCanvas.width;if(l.x>lucCanvas.width)l.x=0;
+      if(l.y<0)l.y=lucCanvas.height;if(l.y>lucCanvas.height)l.y=0;
+      l.o+=l.op*l.os;if(l.o>1||l.o<0)l.op*=-1;
+      const g=lucCtx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r*3.5);
+      g.addColorStop(0,`hsla(${l.hue},70%,80%,${l.o})`);
+      g.addColorStop(1,`hsla(${l.hue},70%,60%,0)`);
+      lucCtx.beginPath();lucCtx.arc(l.x,l.y,l.r*3.5,0,Math.PI*2);
+      lucCtx.fillStyle=g;lucCtx.fill();
+    }
+    lucAF=requestAnimationFrame(loop);
+  }
+  loop();
+}
+function stopLucioles(){
+  if(lucAF)cancelAnimationFrame(lucAF);
+  const c=document.getElementById('lucioles');
+  c.classList.remove('show');
+  setTimeout(()=>{if(lucCtx)lucCtx.clearRect(0,0,c.width,c.height);},1400);
+}
+
+// Parallax mouse (rêve)
+let parallaxOn=false;
+function onMouseMove(e){
+  if(!parallaxOn)return;
+  const dx=(e.clientX/innerWidth-.5)*18,dy=(e.clientY/innerHeight-.5)*12;
+  document.getElementById('s2-card-inner').style.transform=
+    `translate(${dx}px,${dy}px) translateY(${document.body.classList.contains('fx-reve')?'0':'0'}px)`;
+}
+
+// Golden rays (sens)
+function drawRays(){
+  const rc=document.getElementById('rays');
+  rc.innerHTML='';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','100%');svg.setAttribute('height','100%');
+  svg.style.cssText='position:absolute;inset:0';
+  const cx=innerWidth*.5,cy=innerHeight*.55;
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  for(let i=0;i<12;i++){
+    const id='rg'+i;
+    const grad=document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    grad.setAttribute('id',id);grad.setAttribute('gradientUnits','userSpaceOnUse');
+    const a=((i/12)*Math.PI*2);
+    const len=Math.max(innerWidth,innerHeight)*1.3;
+    grad.setAttribute('x1',cx);grad.setAttribute('y1',cy);
+    grad.setAttribute('x2',cx+Math.cos(a)*len);grad.setAttribute('y2',cy+Math.sin(a)*len);
+    ['rgba(212,168,67,0.09)','rgba(212,168,67,0)'].forEach((c,j)=>{
+      const s=document.createElementNS('http://www.w3.org/2000/svg','stop');
+      s.setAttribute('offset',j===0?'0%':'100%');s.setAttribute('stop-color',c);
+      grad.appendChild(s);
+    });
+    defs.appendChild(grad);
+  }
+  svg.appendChild(defs);
+  for(let i=0;i<12;i++){
+    const a=((i/12)*Math.PI*2);const spread=Math.PI*.055;
+    const len=Math.max(innerWidth,innerHeight)*1.3;
+    const x1=cx+Math.cos(a-spread)*len,y1=cy+Math.sin(a-spread)*len;
+    const x2=cx+Math.cos(a+spread)*len,y2=cy+Math.sin(a+spread)*len;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    path.setAttribute('points',`${cx},${cy} ${x1},${y1} ${x2},${y2}`);
+    path.setAttribute('fill',`url(#rg${i})`);
+    path.style.animation=`ray-spin ${18+i*2}s linear infinite`;
+    svg.appendChild(path);
+  }
+  // Inject keyframe for ray spin
+  if(!document.getElementById('ray-kf')){
+    const st=document.createElement('style');st.id='ray-kf';
+    st.textContent='@keyframes ray-spin{to{transform-origin:'+cx+'px '+cy+'px;transform:rotate(360deg)}}';
+    document.head.appendChild(st);
+  }
+  rc.appendChild(svg);
+  rc.classList.add('show');
+}
+function hideRays(){document.getElementById('rays').classList.remove('show');}
+
+// Clear all FX
+function clearFx(){
+  document.body.className='';
+  stopLucioles();hideRays();parallaxOn=false;
+  window.removeEventListener('mousemove',onMouseMove);
+  const ci=document.getElementById('s2-card-inner');
+  if(ci)ci.style.transform='';
+}
+
+// Apply FX per branch
+function applyFx(key){
+  clearFx();
+  document.body.classList.add('fx-'+key);
+  if(key==='reve'){
+    startLucioles();
+    parallaxOn=true;
+    window.addEventListener('mousemove',onMouseMove);
+  } else if(key==='sens'){
+    drawRays();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHOICE LOGIC
+// ═══════════════════════════════════════════════════════
+function pick(key){
+  branch=key;
+  const d=BRANCHES[key];
+  document.documentElement.style.setProperty('--c1',d.c);
+  document.documentElement.style.setProperty('--c1r',d.cr);
+  document.getElementById('s2-ey').textContent=d.s2ey;
+  document.getElementById('s2-txt').innerHTML=d.s2txt.replace('\n','<br>');
+  document.getElementById('s2-sub').textContent=d.s2sub;
+  showPop(d.popIc,d.popTitle,d.popBody,d.c,()=>{
+    applyFx(key);
+    toScene(2);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  POPUP
+// ═══════════════════════════════════════════════════════
+let popCb=null;
+function showPop(ic,title,body,color,cb){
+  const box=document.getElementById('pop-box');
+  box.style.setProperty('--pop-c',color);
+  document.getElementById('pop-ic').textContent=ic;
+  document.getElementById('pop-title').textContent=title;
+  document.getElementById('pop-body').textContent=body;
+  popCb=cb;
+  document.getElementById('pop').classList.add('show');
+}
+function closePop(){
+  document.getElementById('pop').classList.remove('show');
+  if(popCb){const f=popCb;popCb=null;f();}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop();});
+
+function restart(){
+  branch=null;
+  document.documentElement.style.setProperty('--c1','#D4A843');
+  document.documentElement.style.setProperty('--c1r','212,168,67');
+  toScene(0);
+  setTimeout(()=>document.getElementById('dots').style.opacity='0',600);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INTRO REVEAL
+// ═══════════════════════════════════════════════════════
+const QUOTE="Tout l'univers conspire pour que tu accomplisses ta Légende Personnelle.";
+const GOLDS=['Légende','Personnelle.','conspire','univers'];
+function buildQuote(){
+  document.getElementById('s0-quote').innerHTML=QUOTE.split(' ').map(w=>
+    `<span class="word${GOLDS.includes(w)?' gold':''}">${w} </span>`).join('');
+}
+function revealIntro(){
+  setTimeout(()=>{
+    document.getElementById('s0-ey').style.opacity='1';
+    document.getElementById('s0-title').classList.add('vis');
+    document.getElementById('s0-sub').classList.add('vis');
+  },300);
+  setTimeout(()=>document.getElementById('s0-hr').style.opacity='1',900);
+  const words=document.querySelectorAll('.word');
+  words.forEach((w,i)=>setTimeout(()=>w.classList.add('vis'),1100+i*95));
+  const after=1100+words.length*95;
+  setTimeout(()=>{
+    document.getElementById('s0-hr2').style.opacity='1';
+  },after+150);
+  setTimeout(()=>{
+    document.getElementById('s0-cta').style.opacity='1';
+    document.getElementById('dots').style.opacity='1';
+  },after+600);
+}
+
+// ═══════════════════════════════════════════════════════
+//  NIGHT TOGGLE — Improved smooth transitions
+// ═══════════════════════════════════════════════════════
+let isNight = false;
+function toggleNight(){
+  isNight = !isNight;
+  document.body.classList.toggle('night', isNight);
+
+  // Apply click animation: 2 fast spins
+  document.querySelectorAll('.sun-grp').forEach(g => {
+    g.classList.add('spin-click');
+    setTimeout(() => g.classList.remove('spin-click'), 400);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+initCanvas();
+requestAnimationFrame(drawFrame);
+window.addEventListener('resize',initCanvas);
+window.addEventListener('load',()=>{
+  buildQuote();
+  setTimeout(revealIntro,200);
+});
+</script>
+</body>
+</html>
